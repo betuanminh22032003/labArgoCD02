@@ -1,0 +1,30 @@
+# health-demo-app.yaml - ArgoCD Application cho Health Demo
+# App này demo các trạng thái health khác nhau
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: health-demo
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: health-demo
+    lab: lab-03
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  source:
+    # ⚠️ THAY ĐỔI URL NÀY thành Git repo của bạn
+    repoURL: https://github.com/betuanminh22032003/labArgoCD02.git
+    targetRevision: HEAD
+    path: lab-03-sync-strategies/manifests/health-demo
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: health-demo
+  
+  syncPolicy:
+    # Manual sync để bạn có thể quan sát trạng thái OutOfSync
+    syncOptions:
+      - CreateNamespace=true
+    # Không có automated: {} → Manual sync required

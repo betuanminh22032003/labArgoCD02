@@ -1,0 +1,84 @@
+# unhealthy-app.yaml - Demo Application Health: DEGRADED state
+# App này sẽ CrashLoop và ở trạng thái Degraded (màu vàng)
+---
+# Deployment với command gây crash
+# Container sẽ exit ngay lập tức → CrashLoopBackOff → DEGRADED
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unhealthy-app
+  namespace: health-demo
+  labels:
+    app: unhealthy-app
+    demo: health-states
+  annotations:
+    # Giải thích tại sao app này unhealthy
+    description: "This app intentionally crashes to demonstrate Degraded health state"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: unhealthy-app
+  template:
+    metadata:
+      labels:
+        app: unhealthy-app
+    spec:
+      containers:
+        - name: failing-container
+          image: nginx:1.25-alpine
+          # Command này làm container exit ngay với code 1
+          # Kubernetes sẽ restart → CrashLoopBackOff
+          command: 
+            - /bin/sh
+            - -c
+            - |
+              echo "Starting container..."
+              echo "Simulating application error..."
+              sleep 2
+              echo "ERROR: Application crashed!"
+              exit 1
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+
+---
+# Deployment với image không tồn tại
+# Sẽ ở trạng thái Progressing → Degraded vì không pull được image
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-not-found
+  namespace: health-demo
+  labels:
+    app: image-not-found
+    demo: health-states
+  annotations:
+    description: "This app uses non-existent image to demonstrate ImagePullBackOff"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: image-not-found
+  template:
+    metadata:
+      labels:
+        app: image-not-found
+    spec:
+      containers:
+        - name: bad-image
+          # Image này không tồn tại → ImagePullBackOff
+          image: nginx:this-tag-does-not-exist-12345
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
