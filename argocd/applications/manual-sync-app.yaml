@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: manual-sync-demo
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/betuanminh22032003/labArgoCD02.git
+    targetRevision: HEAD
+    path: manifests/simple-nginx
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: manual-sync-ns
+  # No syncPolicy.automated = Manual sync
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

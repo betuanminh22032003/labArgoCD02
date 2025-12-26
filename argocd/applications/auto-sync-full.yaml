@@ -1,0 +1,54 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: auto-sync-full
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/betuanminh22032003/labArgoCD02.git
+    targetRevision: HEAD
+    path: manifests/simple-nginx
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: auto-sync-ns
+  syncPolicy:
+    automated:
+      # Prune resources deleted from Git
+      prune: true
+      
+      # Revert manual changes in cluster
+      selfHeal: true
+      
+      # Allow syncing to empty paths (use with caution)
+      allowEmpty: false
+    
+    syncOptions:
+      # Create namespace if it doesn't exist
+      - CreateNamespace=true
+      
+      # Validate manifests before applying
+      - Validate=true
+      
+      # Use server-side apply (K8s 1.22+)
+      - ServerSideApply=true
+      
+      # How to delete resources
+      - PrunePropagationPolicy=foreground
+      
+      # Prune after all resources synced
+      - PruneLast=true
+      
+      # Apply resources in correct order
+      - ApplyOutOfSyncOnly=true
+      
+      # Respect sync waves
+      - RespectIgnoreDifferences=true
+    
+    # Retry failed syncs
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
