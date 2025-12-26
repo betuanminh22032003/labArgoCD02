@@ -1,0 +1,15 @@
+# 02-configmap.yaml - Deploy SECOND (wave 0)
+# ConfigMap chứa config cho app, phải có trước khi Deployment tham chiếu
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: waves-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    app.kubernetes.io/name: sync-waves-demo
+data:
+  APP_ENV: "demo"
+  APP_VERSION: "1.0.0"
+  MESSAGE: "Hello from Sync Waves Demo!"

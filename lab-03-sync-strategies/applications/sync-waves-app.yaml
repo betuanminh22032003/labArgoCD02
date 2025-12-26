@@ -1,0 +1,35 @@
+# sync-waves-app.yaml - ArgoCD Application cho Sync Waves Demo
+# Apply file này sau khi đã push code lên Git repo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sync-waves-demo
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: sync-waves-demo
+    lab: lab-03
+  # Finalizer đảm bảo resources được cleanup khi xóa Application
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  source:
+    # ⚠️ THAY ĐỔI URL NÀY thành Git repo của bạn
+    repoURL: https://github.com/betuanminh22032003/labArgoCD02.git
+    targetRevision: HEAD
+    path: lab-03-sync-strategies/manifests/sync-waves-demo
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: waves-demo
+  
+  syncPolicy:
+    # Auto sync - ArgoCD sẽ tự động sync khi có thay đổi trong Git
+    automated:
+      prune: true      # Xóa resources không còn trong Git
+      selfHeal: true   # Tự revert nếu có ai sửa trực tiếp trong cluster
+    syncOptions:
+      - CreateNamespace=true       # Tạo namespace nếu chưa có
+      - ApplyOutOfSyncOnly=true    # Chỉ apply những gì thay đổi
+      - PruneLast=true             # Xóa resources sau khi apply xong

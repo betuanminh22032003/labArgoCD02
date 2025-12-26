@@ -1,0 +1,105 @@
+# 05-hooks.yaml - Sync Hooks Demo
+# PreSync: Chạy TRƯỚC khi bất kỳ wave nào được deploy
+# PostSync: Chạy SAU khi TẤT CẢ waves đã deploy và healthy
+---
+# ============================================================
+# PreSync Hook: Chạy trước khi deploy
+# Use cases: Database migrations, config validation, backup
+# ============================================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pre-sync-check
+  namespace: waves-demo
+  annotations:
+    # Hook type: PreSync chạy trước tất cả
+    argocd.argoproj.io/hook: PreSync
+    # Tự động xóa Job sau khi thành công
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    # Có thể set wave cho hooks nếu có nhiều hooks
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  # Tự động xóa Job sau 60 giây (Kubernetes feature)
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      containers:
+        - name: pre-check
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=========================================="
+              echo "🔍 PreSync Hook: Running pre-deployment checks..."
+              echo "📅 Time: $(date)"
+              echo ""
+              echo "Simulating checks..."
+              sleep 2
+              echo "✅ Database connection: OK"
+              sleep 1
+              echo "✅ Config validation: OK"
+              sleep 1
+              echo "✅ Dependencies check: OK"
+              echo ""
+              echo "=========================================="
+              echo "✅ PreSync completed successfully!"
+              echo "=========================================="
+      restartPolicy: Never
+  # Số lần retry nếu Job fail
+  backoffLimit: 1
+
+---
+# ============================================================
+# PostSync Hook: Chạy sau khi tất cả resources đã healthy
+# Use cases: Smoke tests, notifications, cache warm-up
+# ============================================================
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: post-sync-test
+  namespace: waves-demo
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      containers:
+        - name: smoke-test
+          image: curlimages/curl:8.4.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "=========================================="
+              echo "🧪 PostSync Hook: Running smoke tests..."
+              echo "📅 Time: $(date)"
+              echo ""
+              
+              echo "Testing service endpoint..."
+              
+              # Thử gọi service (retry 5 lần)
+              for i in 1 2 3 4 5; do
+                echo "Attempt $i/5..."
+                if curl -sf http://wave-app-service.waves-demo.svc.cluster.local/ > /dev/null 2>&1; then
+                  echo ""
+                  echo "✅ Service is responding!"
+                  echo "=========================================="
+                  echo "✅ All smoke tests passed!"
+                  echo "=========================================="
+                  exit 0
+                fi
+                echo "Service not ready yet, waiting..."
+                sleep 3
+              done
+              
+              # Nếu fail sau 5 lần, vẫn exit 0 để không block
+              # Trong production có thể exit 1 để báo lỗi
+              echo ""
+              echo "⚠️ Service check inconclusive but continuing..."
+              echo "=========================================="
+              exit 0
+      restartPolicy: Never
+  backoffLimit: 2

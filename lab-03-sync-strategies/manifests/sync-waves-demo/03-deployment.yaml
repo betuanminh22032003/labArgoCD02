@@ -1,0 +1,62 @@
+# 03-deployment.yaml - Deploy THIRD (wave 1)
+# Deployment tham chiếu ConfigMap từ wave 0
+# ArgoCD sẽ đợi wave 0 hoàn thành trước khi apply file này
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wave-app
+  namespace: waves-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  labels:
+    app.kubernetes.io/name: sync-waves-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: wave-app
+  template:
+    metadata:
+      labels:
+        app: wave-app
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 80
+          # Env từ ConfigMap (wave 0)
+          env:
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: APP_ENV
+            - name: APP_VERSION
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: APP_VERSION
+          # Health checks - QUAN TRỌNG để ArgoCD biết khi nào pod ready
+          # ArgoCD sẽ đợi pods ready trước khi chuyển sang wave tiếp theo
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi

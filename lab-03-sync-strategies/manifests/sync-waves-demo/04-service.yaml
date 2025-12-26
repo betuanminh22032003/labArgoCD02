@@ -1,0 +1,21 @@
+# 04-service.yaml - Deploy FOURTH (wave 2)
+# Service expose Deployment từ wave 1
+# Chỉ tạo Service sau khi Deployment đã healthy
+apiVersion: v1
+kind: Service
+metadata:
+  name: wave-app-service
+  namespace: waves-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  labels:
+    app.kubernetes.io/name: sync-waves-demo
+spec:
+  type: ClusterIP
+  selector:
+    app: wave-app
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP

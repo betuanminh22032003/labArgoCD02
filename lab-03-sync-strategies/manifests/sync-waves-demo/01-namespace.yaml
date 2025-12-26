@@ -1,0 +1,11 @@
+# 01-namespace.yaml - Deploy FIRST (wave -1)
+# Namespace phải được tạo trước tất cả resources khác
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: waves-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    app.kubernetes.io/name: sync-waves-demo
+    app.kubernetes.io/part-of: argocd-learning
