@@ -42,3 +42,5 @@ configMapGenerator:
     behavior: replace
     literals:
       - config.json={"environment":"development","debug":true,"logLevel":"debug"}
+components:
+  - ../../components/monitoring
