@@ -1,0 +1,13 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: production
+  namespace: argocd
+spec:
+  description: Production project for prod applications
+  sourceRepos:
+    - https://github.com/betuanminh22032003/labArgoCD02.git
+  destinations:
+    - namespace: kustomize-prod
+      server: https://kubernetes.default.svc
+  roles: []
