@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kustomize-demo-dev
+  namespace: argocd
+  labels:
+    app: kustomize-demo
+    env: dev
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/betuanminh22032003/labArgoCD02.git
+    targetRevision: HEAD
+    path: kustomize-app/overlays/dev    # Point to overlay directory
+    
+    # Optional: Kustomize settings in ArgoCD
+    kustomize:
+      # Additional common labels
+      commonLabels:
+        argocd.argoproj.io/instance: kustomize-demo-dev
+      
+      # Override image (useful for image promotion)
+      images:
+        - nginx:1.25-alpine
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kustomize-dev
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

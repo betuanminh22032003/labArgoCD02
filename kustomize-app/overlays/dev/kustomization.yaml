@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the base
+resources:
+  - ../../base
+  - namespace.yaml 
+# Set namespace for all resources
+namespace: kustomize-dev
+
+# Add environment-specific labels
+commonLabels:
+  env: development
+
+# Add annotations
+commonAnnotations:
+  team: platform
+  environment: development
+
+# Override image tag
+images:
+  - name: nginx
+    newTag: "1.25-alpine"
+
+# Patches to apply
+patches:
+  # Patch replicas and environment
+  - target:
+      kind: Deployment
+      name: kustomize-demo
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "development"
+
+# Replace ConfigMap data
+configMapGenerator:
+  - name: kustomize-demo-config
+    behavior: replace
+    literals:
+      - config.json={"environment":"development","debug":true,"logLevel":"debug"}

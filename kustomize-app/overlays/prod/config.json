@@ -1,0 +1,9 @@
+{
+  "environment": "production",
+  "debug": false,
+  "logLevel": "warning",
+  "features": {
+    "caching": true,
+    "rateLimit": true
+  }
+}

@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kustomize-demo-prod
+  namespace: argocd
+  labels:
+    app: kustomize-demo
+    env: prod
+spec:
+  project: production
+  
+  source:
+    repoURL: https://github.com/betuanminh22032003/labArgoCD02.git
+    targetRevision: v1.0.0              # Pin to release tag
+    path: kustomize-app/overlays/prod
+    
+    kustomize:
+      commonLabels:
+        argocd.argoproj.io/instance: kustomize-demo-prod
+      # Version pinned in overlay, but can override here
+      images:
+        - nginx:1.25
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kustomize-prod
+  
+  # Manual sync for production
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true
+  
+  # Ignore replica changes (HPA manages this)
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

@@ -1,0 +1,46 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Reference the base kustomization
+resources:
+  - ../../base
+  - namespace.yaml
+  - hpa.yaml
+  - ingress.yaml
+  - pdb.yaml
+
+# Namespace for production
+namespace: kustomize-prod
+
+# Environment labels/annotations
+commonLabels:
+  env: production
+
+commonAnnotations:
+  team: platform
+  environment: production
+
+# Image tag override for prod
+images:
+  - name: nginx
+    newTag: "1.25-alpine"
+
+# Patches to apply in production
+patches:
+  - target:
+      kind: Deployment
+      name: kustomize-demo
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: "production"
+
+# Use the existing config.json as a ConfigMap source
+configMapGenerator:
+  - name: kustomize-demo-config
+    behavior: replace
+    files:
+      - config.json

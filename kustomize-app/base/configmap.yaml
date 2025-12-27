@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kustomize-demo-config
+data:
+  config.json: |
+    {
+      "environment": "base",
+      "debug": false,
+      "logLevel": "info"
+    }
