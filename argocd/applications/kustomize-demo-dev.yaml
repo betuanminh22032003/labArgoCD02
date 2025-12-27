@@ -11,7 +11,7 @@ spec:
   
   source:
     repoURL: https://github.com/betuanminh22032003/labArgoCD02.git
-    targetRevision: HEAD
+    targetRevision: develop
     path: kustomize-app/overlays/dev    # Point to overlay directory
     
     # Optional: Kustomize settings in ArgoCD
