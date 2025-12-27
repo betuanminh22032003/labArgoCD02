@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dotnet-api-staging
+  namespace: argocd
+  labels:
+    app: dotnet-api
+    env: staging
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  source:
+    repoURL: https://github.com/betuanminh22032003/labArgoCD02.git
+    targetRevision: release/*            # Track release branches
+    path: helm/dotnet-api
+    
+    helm:
+      releaseName: dotnet-api
+      valueFiles:
+        - values.yaml
+        - values-staging.yaml
+      # Override specific values
+      parameters:
+        - name: image.tag
+          value: "staging-latest"
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: staging
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
