@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis-cache
+  namespace: argocd
+spec:
+  project: default
+  
+  source:
+    # External Helm repository
+    repoURL: https://charts.bitnami.com/bitnami
+    chart: redis                         # Chart name
+    targetRevision: 18.0.0               # Chart version
+    
+    helm:
+      releaseName: redis-cache
+      values: |
+        auth:
+          enabled: true
+          password: "demo-password"      # Use secret in production!
+        master:
+          persistence:
+            enabled: true
+            size: 1Gi
+        replica:
+          replicaCount: 2
+          persistence:
+            enabled: true
+            size: 1Gi
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: redis
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
